@@ -47,13 +47,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30)
     email = models.EmailField(_("email address"),unique=True)
     is_staff = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(default=timezone.now, blank=True, null=True)
     last_name = models.CharField(max_length=150)
 
     USERNAME_FIELD = 'email'
 
     objects = UserManager()
-
-    def __str__(self):
-        return self.email
 
