@@ -44,7 +44,7 @@ class ProjectMember(models.Model):
     Add string representation for this model with project name and user email/first name.
     """
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, to_field='email')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
         constraints = [

@@ -18,7 +18,7 @@ class Todo(models.Model):
 
         Add string representation for this model with todos name.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, to_field='email', null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=1000)
     done = models.BooleanField(default=False)
     date_created = models.DateTimeField(default=timezone.now, blank=True, null=True)
