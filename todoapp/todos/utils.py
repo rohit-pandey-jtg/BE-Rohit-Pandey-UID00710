@@ -314,7 +314,7 @@ def fetch_project_wise_report():
             })
         
         result.append({
-            "project_title" : project.title,
+            "project_title" : project.name,
             "report" : report
         })
 
