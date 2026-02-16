@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework import response as Response
+from rest_framework.response import Response
 from .models import Todo
 
 from .serializers import TodoApiSerializer
@@ -42,32 +42,32 @@ class TodoAPIViewSet(viewsets.ModelViewSet):
             {
               "name" : result["name"],
               "done" : result["done"],
-              "Date_created" : result["date_created"]
+              "date_created" : result["date_created"]
             },
             status = status.HTTP_201_CREATED
         )
     
     def update(self, request, *args, **kwargs):
-      partial = kwargs.pop('partial', False)
-      instance = self.get_object()
-      incoming_data = {
-          "id" : request.data.get("todo_id"),
-          "name" : request.data.get("todo"),
-          "done" : request.data.get("done")
-      }
-      serializer = self.get_serializer(instance, data = incoming_data, partial = partial)
-      serializer.is_valid(raise_exception = True)
-      serializer.save()
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        incoming_data = {
+            "id" : request.data.get("todo_id"),
+            "name" : request.data.get("todo"),
+            "done" : request.data.get("done")
+        }
+        serializer = self.get_serializer(instance, data = incoming_data, partial = partial)
+        serializer.is_valid(raise_exception = True)
+        serializer.save()
 
-      result = serializer.data
-      return Response(
-          {
-              "todo_id" : result["id"],
-              "todo" : result["name"],
-              "done" : result["done"]
-          },
-          status = status.HTTP_200_OK
-      )
+        result = serializer.data
+        return Response(
+            {
+                "todo_id" : result["id"],
+                "todo" : result["name"],
+                "done" : result["done"]
+            },
+            status = status.HTTP_200_OK
+        )
 
     # Only response is custom
     def retrieve(self, request, *args, **kwargs):

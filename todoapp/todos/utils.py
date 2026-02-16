@@ -1,6 +1,7 @@
 from django.db.models import Count, Q
 import json
-from .serializers import TodoSerializer, TodoApiStatsSerializer, TodoApiFiveUsersMaxPendingSerializers, TodoApiUsersNPendingSerializers, TodoApiFetchUserWiseProjectStatus
+from .serializers import TodoSerializer
+from users.serializers import UserStatsSerializer, FetchFiveUserWithMaxPendingTodoSerializer, FetchUserWithNPendingTodoSerializer, FetchUserWiseProjectStatusSerializer
 
 from .models import Todo
 from users.models import CustomUser
@@ -122,7 +123,7 @@ def fetch_users_todo_stats():
         completed_count = Count("todos", filter=Q(todos__done=True)),
         pending_count = Count("todos", filter=Q(todos__done=False))
     )
-    serializer = TodoApiStatsSerializer(users, many=True)
+    serializer = UserStatsSerializer(users, many=True)
     return json.loads(json.dumps(serializer.data))
 
 
@@ -153,17 +154,7 @@ def fetch_five_users_with_max_pending_todos():
         pending_count=Count('todos', filter=Q(todos__done=False)) 
     ).order_by('-pending_count')[:5]
 
-    # result=[]
-    # for user in users:
-    #     result.append({
-    #         "id" : user.id,
-    #         "first_name" : user.first_name,
-    #         "last_name" : user.last_name,
-    #         "email" : user.email,
-    #         "pending_count" : user.pending_count
-    #     })
-
-    serializer = TodoApiFiveUsersMaxPendingSerializers(users, many = True)
+    serializer = FetchFiveUserWithMaxPendingTodoSerializer(users, many = True)
     return json.loads(json.dumps(serializer.data))
 
 
@@ -197,7 +188,7 @@ def fetch_users_with_n_pending_todos(n):
         pending_count = Count('todos', filter = Q(todos__done=False))
     ).filter(pending_count=n)
 
-    serialize = TodoApiUsersNPendingSerializers(users, many = True)
+    serialize = FetchUserWithNPendingTodoSerializer(users, many = True)
 
     return json.loads(json.dumps(serialize.data))
 
@@ -377,7 +368,6 @@ def fetch_user_wise_project_status():
         )
     )
 
-    serializer = TodoApiFetchUserWiseProjectStatus(users, many = True)
-
+    serializer = FetchUserWiseProjectStatusSerializer(users, many = True)
     return json.loads(json.dumps(serializer.data))
 
