@@ -1,4 +1,11 @@
+from django.db.models import Count, Q
 import json
+from .serializers import TodoSerializer
+
+from .models import Todo
+from users.models import CustomUser
+from projects.models import Project
+from django.contrib.postgres.aggregates import ArrayAgg
 # Add code to this util to return all users list in specified format.
 # [ {
 #   "id": 1,
@@ -55,7 +62,9 @@ def fetch_all_todo_list_with_user_details():
     :return: list of dicts - List of todos
     """
     # Write your code here
-    pass
+    todos = Todo.objects.select_related("user").all()
+    serializer = TodoSerializer(todos, many=True)
+    return json.loads(json.dumps(serializer.data))
 
 
 # Add code to this util to return all projects with following details in specified format.
@@ -109,7 +118,24 @@ def fetch_users_todo_stats():
     :return: list of dicts -  List of users with stats
     """
     # Write your code here
-    pass
+    users = CustomUser.objects.annotate(
+        completed_count = Count("todos", filter=Q(todos__done=True)),
+        pending_count = Count("todos", filter=Q(todos__done=False))
+    )
+
+    result = []
+
+    for user in users:
+        result.append({
+            "id" : user.id,
+            "first_name" : user.first_name,
+            "last_name" : user.last_name,
+            "email" : user.email,
+            "completed_count" : user.completed_count,
+            "pending_count" : user.pending_count
+        })
+
+    return json.loads(json.dumps(result))
 
 
 # Add code to this util to return top five users with maximum number of pending todos in specified format.
@@ -135,7 +161,21 @@ def fetch_five_users_with_max_pending_todos():
     :return: list of dicts -  List of users
     """
     # Write your code here
-    pass
+    users = CustomUser.objects.annotate(
+        pending_count=Count('todos', filter=Q(todos__done=False)) 
+    ).order_by('-pending_count')[:5]
+
+    result=[]
+    for user in users:
+        result.append({
+            "id" : user.id,
+            "first_name" : user.first_name,
+            "last_name" : user.last_name,
+            "email" : user.email,
+            "pending_count" : user.pending_count
+        })
+
+    return json.loads(json.dumps(result))
 
 
 # Add code to this util to return users with given number of pending todos in specified format.
@@ -164,8 +204,22 @@ def fetch_users_with_n_pending_todos(n):
     :return: list of dicts -  List of users
     """
     # Write your code here
-    pass
+    users = CustomUser.objects.annotate(
+        pending_count = Count('todos', filter = Q(todos__done=False))
+    ).filter(pending_count=n)
 
+    result = []
+
+    for user in users:
+        result.append({
+            "id" : user.id,
+            "first_name": user.first_name,
+            "last_name" : user.last_name,
+            "email" : user.email,
+            "pending_count" : user.pending_count
+        })
+
+    return json.loads(json.dumps(result))
 
 # Add code to this util to return todos that were created in between given dates (add proper order too) and marked as
 # done in specified format.
@@ -269,8 +323,31 @@ def fetch_project_wise_report():
     :return: list of dicts - List of report data
     """
     # Write your code here
-    pass
+    result = []
+    projects = Project.objects.prefetch_related('members').all()
+    for project in projects:
+        members = project.members.annotate(
+            pending_count=Count("todos", filter=Q(todos__done=False)), # There should be a relation from project to todo then todo__project = project
+            completed_count=Count("todos", filter=Q(todos__done=True))
+        ).order_by("email")
 
+        report = []
+
+        for m in members:
+            report.append({
+                "first_name": m.first_name,
+                "last_name" : m.last_name,
+                "email" : m.email,
+                "pending_count" : m.pending_count,
+                "completed_count" : m.completed_count
+            })
+        
+        result.append({
+            "project_title" : project.title,
+            "report" : report
+        })
+
+    return json.loads(json.dumps(result))
 
 # Add code to this util to return all users project stats in specified format.
 # [{
@@ -302,5 +379,35 @@ def fetch_user_wise_project_status():
     :return: list of dicts - List of user project data
     """
     # Write your code here
-    pass
+    result = []
+
+    users = CustomUser.objects.annotate(
+        to_do_projects = ArrayAgg(
+            "projects__name",
+            filter = Q(projects__status = 0),
+            distinct = True
+        ),
+        in_progress_projects = ArrayAgg(
+            "projects__name",
+            filter = Q(projects__status = 1),
+            distinct = True
+        ),
+        completed_projects = ArrayAgg(
+            "projects__name",
+            filter = Q(projects__status = 2),
+            distinct = True
+        )
+    )
+
+    for user in users:
+        result.append({
+            "first_name" : user.first_name,
+            "last_name" : user.last_name,
+            "email" : user.email,
+            "to_do_projects" : user.to_do_projects,
+            "in_progress_projects" : user.in_progress_projects,
+            "completed_projects" : user.completed_projects
+        })
+
+    return json.loads(json.dumps(result))
 
