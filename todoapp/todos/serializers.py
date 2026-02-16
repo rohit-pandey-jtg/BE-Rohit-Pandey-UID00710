@@ -18,3 +18,19 @@ class TodoSerializer(serializers.ModelSerializer):
     
     def get_created_at(self, obj):
         return obj.date_created.strftime("%I:%M %p, %d %b, %Y")
+    
+class TodoApiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ["id", "name", "done", "date_created"]
+
+# class TodoApiStatsSerializer(serializers.ModelSerializer):
+#     completed_count = serializers.SerializerMethodField()
+#     pending_count = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = Todo
+#         fields = ["id", "first_name", "last_name", "email", "completed_count", "pending_count"]
+
+#     def get_completed_count(self, obj):
+#         return  
