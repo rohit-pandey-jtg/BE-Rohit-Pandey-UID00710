@@ -1,6 +1,6 @@
 from django.db.models import Count, Q
 import json
-from .serializers import TodoSerializer
+from .serializers import TodoSerializer, TodoApiStatsSerializer, TodoApiFiveUsersMaxPendingSerializers, TodoApiUsersNPendingSerializers, TodoApiFetchUserWiseProjectStatus
 
 from .models import Todo
 from users.models import CustomUser
@@ -122,20 +122,8 @@ def fetch_users_todo_stats():
         completed_count = Count("todos", filter=Q(todos__done=True)),
         pending_count = Count("todos", filter=Q(todos__done=False))
     )
-
-    result = []
-
-    for user in users:
-        result.append({
-            "id" : user.id,
-            "first_name" : user.first_name,
-            "last_name" : user.last_name,
-            "email" : user.email,
-            "completed_count" : user.completed_count,
-            "pending_count" : user.pending_count
-        })
-
-    return json.loads(json.dumps(result))
+    serializer = TodoApiStatsSerializer(users, many=True)
+    return json.loads(json.dumps(serializer.data))
 
 
 # Add code to this util to return top five users with maximum number of pending todos in specified format.
@@ -165,17 +153,18 @@ def fetch_five_users_with_max_pending_todos():
         pending_count=Count('todos', filter=Q(todos__done=False)) 
     ).order_by('-pending_count')[:5]
 
-    result=[]
-    for user in users:
-        result.append({
-            "id" : user.id,
-            "first_name" : user.first_name,
-            "last_name" : user.last_name,
-            "email" : user.email,
-            "pending_count" : user.pending_count
-        })
+    # result=[]
+    # for user in users:
+    #     result.append({
+    #         "id" : user.id,
+    #         "first_name" : user.first_name,
+    #         "last_name" : user.last_name,
+    #         "email" : user.email,
+    #         "pending_count" : user.pending_count
+    #     })
 
-    return json.loads(json.dumps(result))
+    serializer = TodoApiFiveUsersMaxPendingSerializers(users, many = True)
+    return json.loads(json.dumps(serializer.data))
 
 
 # Add code to this util to return users with given number of pending todos in specified format.
@@ -208,18 +197,9 @@ def fetch_users_with_n_pending_todos(n):
         pending_count = Count('todos', filter = Q(todos__done=False))
     ).filter(pending_count=n)
 
-    result = []
+    serialize = TodoApiUsersNPendingSerializers(users, many = True)
 
-    for user in users:
-        result.append({
-            "id" : user.id,
-            "first_name": user.first_name,
-            "last_name" : user.last_name,
-            "email" : user.email,
-            "pending_count" : user.pending_count
-        })
-
-    return json.loads(json.dumps(result))
+    return json.loads(json.dumps(serialize.data))
 
 # Add code to this util to return todos that were created in between given dates (add proper order too) and marked as
 # done in specified format.
@@ -379,8 +359,6 @@ def fetch_user_wise_project_status():
     :return: list of dicts - List of user project data
     """
     # Write your code here
-    result = []
-
     users = CustomUser.objects.annotate(
         to_do_projects = ArrayAgg(
             "projects__name",
@@ -399,15 +377,7 @@ def fetch_user_wise_project_status():
         )
     )
 
-    for user in users:
-        result.append({
-            "first_name" : user.first_name,
-            "last_name" : user.last_name,
-            "email" : user.email,
-            "to_do_projects" : user.to_do_projects,
-            "in_progress_projects" : user.in_progress_projects,
-            "completed_projects" : user.completed_projects
-        })
+    serializer = TodoApiFetchUserWiseProjectStatus(users, many = True)
 
-    return json.loads(json.dumps(result))
+    return json.loads(json.dumps(serializer.data))
 

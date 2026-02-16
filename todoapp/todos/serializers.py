@@ -19,18 +19,23 @@ class TodoSerializer(serializers.ModelSerializer):
     def get_created_at(self, obj):
         return obj.date_created.strftime("%I:%M %p, %d %b, %Y")
     
-class TodoApiSerializer(serializers.ModelSerializer):
+
+class TodoApiStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = ["id", "name", "done", "date_created"]
+        fields = ["id", "first_name", "last_name", "email", "completed_count", "pending_count"]
 
-# class TodoApiStatsSerializer(serializers.ModelSerializer):
-#     completed_count = serializers.SerializerMethodField()
-#     pending_count = serializers.SerializerMethodField()
+class TodoApiFiveUsersMaxPendingSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ["id", "first_name", "last_name", "email", "pending_count"]
 
-#     class Meta:
-#         model = Todo
-#         fields = ["id", "first_name", "last_name", "email", "completed_count", "pending_count"]
+class TodoApiUsersNPendingSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ["id", "first_name", "last_name", "email", "pending_count"]
 
-#     def get_completed_count(self, obj):
-#         return  
+class TodoApiFetchUserWiseProjectStatus(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ["first_name", "last_name", "email", "to_do_projects", "in_progress_projects", "completed_projects"]
