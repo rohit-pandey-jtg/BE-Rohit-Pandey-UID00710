@@ -26,7 +26,7 @@ class TodoAPIViewSet(viewsets.ModelViewSet):
     queryset = Todo.objects.all()
     serializer_class = TodoApiSerializer
 
-    # Request and Response both custom
+    # localhost:8000/api/todos/todos/ - POST
     def create(self, request, *args, **kwargs):
         incoming_data = {
             "name" : request.data.get("todo"),
@@ -47,15 +47,17 @@ class TodoAPIViewSet(viewsets.ModelViewSet):
             status = status.HTTP_201_CREATED
         )
     
+    # localhost:8000/api/todos/todos/1/ - PUT
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        # partial = kwargs.pop('partial', True)
         instance = self.get_object()
         incoming_data = {
             "id" : request.data.get("todo_id"),
             "name" : request.data.get("todo"),
             "done" : request.data.get("done")
         }
-        serializer = self.get_serializer(instance, data = incoming_data, partial = partial)
+        # In get serializer I need to send user field so set partial to false as not extracting user anywhere
+        serializer = self.get_serializer(instance, data = incoming_data, partial = True)
         serializer.is_valid(raise_exception = True)
         serializer.save()
 
@@ -69,7 +71,7 @@ class TodoAPIViewSet(viewsets.ModelViewSet):
             status = status.HTTP_200_OK
         )
 
-    # Only response is custom
+    # localhost:8000/api/todos/todos/12/- GET
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
         return Response(
@@ -81,6 +83,7 @@ class TodoAPIViewSet(viewsets.ModelViewSet):
             status = response.status_code
         )
     
+    # localhost:8000/api/todos/todos/?user_id=6 - GET
     def get_queryset(self):
         queryset = super().get_queryset()
         user_id = self.request.query_params.get("user_id")
