@@ -1,7 +1,7 @@
-from django.db.models import Count, Q
+from django.db.models import Prefetch, Count, Q
 import json
 from .serializers import TodoSerializer
-from users.serializers import UserStatsSerializer, FetchFiveUserWithMaxPendingTodoSerializer, FetchUserWithNPendingTodoSerializer, FetchUserWiseProjectStatusSerializer
+from users.serializers import UserStatsSerializer, FetchFiveUserWithMaxPendingTodoSerializer, FetchUserWithNPendingTodoSerializer, FetchUserWiseProjectStatusSerializer, ProjectReportSerializer
 
 from .models import Todo
 from users.models import CustomUser
@@ -294,31 +294,40 @@ def fetch_project_wise_report():
     :return: list of dicts - List of report data
     """
     # Write your code here
-    result = []
-    projects = Project.objects.prefetch_related('members').all()
-    for project in projects:
-        members = project.members.annotate(
-            pending_count=Count("todos", filter=Q(todos__done=False)), # There should be a relation from project to todo then todo__project = project
-            completed_count=Count("todos", filter=Q(todos__done=True))
-        ).order_by("email")
+    # result = []
+    # projects = Project.objects.prefetch_related('members')
+    # for project in projects:
+    #     members = project.members.annotate(
+    #         pending_count=Count("todos", filter=Q(todos__done=False)), # There should be a relation from project to todo then todo__project = project
+    #         completed_count=Count("todos", filter=Q(todos__done=True))
+    #     ).order_by("email")
 
-        report = []
-
-        for m in members:
-            report.append({
-                "first_name": m.first_name,
-                "last_name" : m.last_name,
-                "email" : m.email,
-                "pending_count" : m.pending_count,
-                "completed_count" : m.completed_count
-            })
+    #     serializer = FetchProjectWiseReportSerializer(members, many = True)
         
-        result.append({
-            "project_title" : project.name,
-            "report" : report
-        })
+    #     result.append({
+    #         "project_title" : project.name,
+    #         "report" : serializer.data
+    #     })
 
-    return json.loads(json.dumps(result))
+    # members_queryset = CustomUser.objects.annotate(
+    #     pending_count=Count("todos", filter=Q(todos__done=False)), 
+    #     completed_count=Count("todos", filter=Q(todos__done=True))
+    # ).order_by("email")
+
+    projects = Project.objects.prefetch_related(
+        Prefetch(
+            "members",
+            queryset = CustomUser.objects.annotate(
+                pending_count = Count("todos", filter = Q(todos__done = False)),
+                completed_count = Count("todos", filter = Q(todos__done = True))
+            ).order_by("email"),
+            to_attr="computed_members_data"
+        )
+    )
+    
+    serializer = ProjectReportSerializer(projects, many = True)
+
+    return json.loads(json.dumps(serializer.data))
 
 # Add code to this util to return all users project stats in specified format.
 # [{

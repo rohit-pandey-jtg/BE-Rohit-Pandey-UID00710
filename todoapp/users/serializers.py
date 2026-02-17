@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
 from .models import CustomUser
+from projects.models import Project
 
 
 # Add your serializers
@@ -16,21 +17,42 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "email"]
         
 class UserStatsSerializer(serializers.ModelSerializer):
+    completed_count = serializers.IntegerField()
+    pending_count = serializers.IntegerField()
     class Meta:
         model = CustomUser
         fields = ["id", "first_name", "last_name", "email", "completed_count", "pending_count"]
 
 class FetchFiveUserWithMaxPendingTodoSerializer(serializers.ModelSerializer):
+    pending_count = serializers.IntegerField()
     class Meta:
         model = CustomUser
         fields = ["id", "first_name", "last_name", "email", "pending_count"]
 
 class FetchUserWithNPendingTodoSerializer(serializers.ModelSerializer):
+    pending_count = serializers.IntegerField()
     class Meta:
         model = CustomUser
         fields = ["id", "first_name", "last_name", "email", "pending_count"]
 
 class FetchUserWiseProjectStatusSerializer(serializers.ModelSerializer):
+    to_do_projects = serializers.ListField(child=serializers.CharField())
+    in_progress_projects = serializers.ListField(child=serializers.CharField())
+    completed_projects = serializers.ListField(child=serializers.CharField())
     class Meta:
         model = CustomUser
         fields = ["first_name", "last_name", "email", "to_do_projects", "in_progress_projects", "completed_projects"]
+
+class MemberReportSerializer(serializers.ModelSerializer):
+    pending_count =   serializers.IntegerField()
+    completed_count = serializers.IntegerField()
+    class Meta:
+        model = CustomUser
+        fields = ["first_name", "last_name", "email", "pending_count", "completed_count"]
+
+class ProjectReportSerializer(serializers.ModelSerializer):
+    report = MemberReportSerializer(source = "computed_members_data", many = True)
+    project_title = serializers.CharField(source = "name")
+    class Meta:
+        model = Project
+        fields = ["project_title", "report"]

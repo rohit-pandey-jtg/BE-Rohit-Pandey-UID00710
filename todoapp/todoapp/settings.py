@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'todos',
     'projects',
 
-    'django_nose'
+    # 'django_nose'
 ]
 AUTH_USER_MODEL = u'users.CustomUser'
 
@@ -146,7 +146,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Use nose to run all tests
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+# TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # Tell nose to measure coverage on the 'foo' and 'bar' apps
 NOSE_ARGS = [
